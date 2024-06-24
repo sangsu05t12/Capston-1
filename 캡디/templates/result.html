@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResNet-18 Image Classification</title>
+
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #008080;
+        }
+
+        #upload-form {
+            margin: 20px 0;
+        }
+
+        input[type="file"] {
+            padding: 10px;
+            background-color: #008080;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        input[type="button"] {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        #prediction-result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #eee;
+            border-radius: 5px;
+        }
+
+        #image-preview {
+            margin-top: 20px;
+            max-width: 100%; /* 이미지가 부모 요소를 넘어가지 않도록 */
+            height: auto; /* 가로 비율 유지 */
+        }
+    </style>
+</head>
+
+<body>
+    <h1>ResNet-18 Image Classification</h1>
+    <form id="upload-form" enctype="multipart/form-data">
+        <input type="file" name="file" accept="image/*" onchange="previewImage()">
+        <input type="button" value="Predict" onclick="predictImage()">
+    </form>
+    <button onclick="getResult()">Get Result</button>
+    <div id="image-preview"></div>
+    <div id="prediction-result"></div>
+
+    <script>
+        function previewImage() {
+            const fileInput = document.querySelector('input[type="file"]');
+            const preview = document.getElementById('image-preview');
+
+            const file = fileInput.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+
+                reader.onload = function (e) {
+                    preview.innerHTML = `<img src="${e.target.result}" alt="Preview" id="uploaded-image">`;
+                };
+
+                reader.readAsDataURL(file);
+            } else {
+                preview.innerHTML = ''; // 파일이 선택되지 않았을 때 미리보기 초기화
+            }
+        }
+
+        function predictImage() {
+            const formData = new FormData(document.getElementById('upload-form'));
+
+            fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(result => {
+                    document.getElementById('prediction-result').innerText = result.result;
+                })
+                .catch(error => {
+                    console.error('Prediction failed:', error);
+                });
+        }
+
+function getResult() {
+    fetch('/get_result')
+        .then(response => response.text())
+        .then(result => {
+            document.getElementById('prediction-result').innerText = formatResult(result);
+        })
+        .catch(error => {
+            console.error('Failed to get result:', error);
+        });
+}
+
+function formatResult(result) {
+    try {
+        const parsedResult = JSON.parse(result);
+        if (parsedResult && parsedResult.result) {
+            return `This is the ${parsedResult.result}`;
+        } else {
+            return JSON.stringify(parsedResult);
+        }
+    } catch (error) {
+        console.error('Error parsing result:', error);
+        return JSON.stringify(result);
+    }
+}
+    </script>
+</body>
+
+</html>
